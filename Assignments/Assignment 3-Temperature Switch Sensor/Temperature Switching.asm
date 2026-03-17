@@ -211,10 +211,10 @@ _measured_Decimal:
     MOVLW   Subtractor_Ten
     CLRF    Quotient_1
 
-_D1:
+_MT_1:
     INCF    Quotient_1
     SUBWF   Numerator_1
-    BC      _D1
+    BC      _MT_1
 
     ADDWF   Numerator_1
     DECF    Quotient_1
@@ -223,10 +223,10 @@ _D1:
     MOVFF   Quotient_1, Numerator_1
     CLRF    Quotient_1
 
-_D2:
+_MT_2:
     INCF    Quotient_1
     SUBWF   Numerator_1
-    BC      _D2
+    BC      _MT_2
 
     ADDWF   Numerator_1
     DECF    Quotient_1
@@ -246,10 +246,10 @@ _ref_Decimal:
     MOVLW   Subtractor_Ten
     CLRF    Quotient_2
 
-_D11:
+_RT_1:
     INCF    Quotient_2
     SUBWF   Numerator_2
-    BC      _D11
+    BC      _RT_1
 
     ADDWF   Numerator_2
     DECF    Quotient_2
@@ -258,10 +258,10 @@ _D11:
     MOVFF   Quotient_2, Numerator_2
     CLRF    Quotient_2
 
-_D22:
+_RT_2:
     INCF    Quotient_2
     SUBWF   Numerator_2
-    BC      _D22
+    BC      _RT_2
 
     ADDWF   Numerator_2
     DECF    Quotient_2
