@@ -202,7 +202,7 @@ _Do_Nothing:
     GOTO    _measured_Decimal
 
 ;----------------------------------
-; Split measured temp into digits
+; Continued Subtraction Of Meas Temp (Hex-Dec)
 ;----------------------------------
 _measured_Decimal:
     MOVF    measuredTempREG, 0
@@ -237,7 +237,7 @@ _MT_2:
     GOTO    _ref_Decimal
 
 ;----------------------------------
-; Split ref temp into digits
+; Continued Subtraction Of Ref Temp (Hex-Dec)
 ;----------------------------------
 _ref_Decimal:
     MOVF    refTempREG, 0
