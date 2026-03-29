@@ -4,9 +4,9 @@
 ; Program Details:
 ; The purpose of this program is to implement a system
 ; that responds to the following keypad inputs:
-;   - Key '1': Increment the counter
-;   - Key '2': Decrement the counter
-;   - Key '3': Reset the counter to 0
+;   - Key '1': Increment the Value_Counter
+;   - Key '2': Decrement the Value_Counter
+;   - Key '3': Reset the Value_Counter to 0
 ;
 ; Inputs: Keypad (Connected to PORTB)
 ; Outputs: 7-Segment Display (connected to PORTD)
@@ -33,10 +33,10 @@
 ;---------------------
 ; Program Variables
 ;---------------------
-COUNTER     equ 0x20      ; 0?0xF value
-BUTTON	    equ 0x21      ; 1=up, 2=down, 3=reset
-Outer_delay equ 0x22
-Inner_delay equ 0x23
+Value_Counter     equ 0x20      ; 0->0xF value
+Keypad_Press	  equ 0x21      ; 1=Increment, 2=Decrement, 3=Reset
+Outer_Delay       equ 0x22      ;Outer Delay
+Inner_Delay       equ 0x23      ;Inner Delay
 
 ;---------------------
 ; Start Program
@@ -44,116 +44,117 @@ Inner_delay equ 0x23
     PSECT absdata,abs,ovrld
 
     ORG     0x00
-    GOTO    _initialization
+    GOTO    _Start
 
     ORG     0x20
 
-_initialization:
-    CLRF    COUNTER
-    CLRF    BUTTON
-    RCALL   _setupPorts
-    GOTO    _main
+_Start:
+    CLRF    Value_Counter
+    CLRF    Keypad_Press
+    RCALL   _Ports_Define
+    GOTO    _Main
 
-_setupPorts:
-    BANKSEL PORTB
+_Ports_Define:
+    BANKSEL PORTB                ;Port B are configured for Keypad
     CLRF PORTB
     BANKSEL LATB
     CLRF LATB
     BANKSEL ANSELB
     CLRF ANSELB
     BANKSEL TRISB
-    MOVLW 0b11111000	; Set RB0-RB2 as outputs and RB3-RB7 as inputs
+    MOVLW 0b11111000	        ; Set RB0-RB2 As Output Ports & RB3-RB7 As Input Ports
     MOVWF TRISB
 
-    BANKSEL PORTD
+    BANKSEL PORTD                ;Port D are configured for 7_Segment
     CLRF PORTD
     BANKSEL LATD
     CLRF LATD
     BANKSEL ANSELD
     CLRF ANSELD
     BANKSEL TRISD
-    MOVLW 0x00
+    MOVLW 0x00                    ; Set RD0-RD7 As Output Ports (7_Seg)
     MOVWF TRISD
 
 ;---------------------
 ; Main Loop
 ;---------------------
-_main:
-    CALL _displayDigit      ; Display "0" at the start
-_loop:
-    CALL _displayDigit
-    RCALL _scanKeypad
+_Main:
+    CALL _Display_Digit          ; Display "0" at the start
 
-    MOVF BUTTON, W
-    XORLW 0x01              ; Is key #1 held?
+_Loop_Function:
+    CALL _Display_Digit
+    RCALL _Keypad_Scan
+
+    MOVF Keypad_Press, W
+    XORLW 0x01                  ; Is key #1 Pressed?
     BTFSC STATUS, 2
-    GOTO _increment_loop
+    GOTO _Increment_Loop
 
-    MOVF BUTTON, W
-    XORLW 0x02              ; Is key #2 held?
+    MOVF Keypad_Press, W
+    XORLW 0x02                  ; Is key #2 Pressed?
     BTFSC STATUS, 2
-    GOTO _decrement_loop
+    GOTO _Decrement_Loop
 
-    MOVF BUTTON, W
-    XORLW 0x03              ; Is key #3 held?
+    MOVF Keypad_Press, W
+    XORLW 0x03              ; Is key #3 Pressed?
     BTFSC STATUS, 2
-    GOTO _reset
+    GOTO _Reset
 
-    GOTO _loop              ; If no valid key, scan again
+    GOTO _Loop_Function     ; Any Other Key_Loop
 
-_increment_loop:
-    CALL _displayDigit
-    CALL _delay
+_Increment_Loop:
+    CALL _Display_Digit
+    CALL _Delay
 
-    INCF COUNTER, F
-    MOVF COUNTER, W
-    XORLW 0x10              ; If COUNTER > 0x0F, go to 0
+    INCF Value_Counter, F
+    MOVF Value_Counter, W
+    XORLW 0x10              ; If Value_Counter > 0x0F, go to 0 (Wrap Around Check)
     BTFSS STATUS, 2
-    GOTO _inc_hold_check
-    CLRF COUNTER
+    GOTO _Increment_Hold_Check
+    CLRF Value_Counter
 
-_inc_hold_check:
-    RCALL _scanKeypad
-    MOVF BUTTON, W
+_Increment_Hold_Check:
+    RCALL _Keypad_Scan
+    MOVF Keypad_Press, W
     XORLW 0x01
     BTFSC STATUS, 2
-    GOTO _increment_loop     ; Continue if still holding #1
-    GOTO _loop
+    GOTO _Increment_Loop     ; Continue if still holding #1
+    GOTO _Loop_Function
 
-_decrement_loop:
-    CALL _displayDigit
-    CALL _delay
+_Decrement_Loop:
+    CALL _Display_Digit
+    CALL _Delay
 
-    DECF COUNTER, F           ; Decrease COUNTER
-    MOVF COUNTER, W
-    XORLW 0xFF                ; Is COUNTER now ready to wrap around?
+    DECF Value_Counter, F           ; Decrease Value_Counter
+    MOVF Value_Counter, W
+    XORLW 0xFF                ; Is Value_Counter now ready to wrap around?
     BTFSC STATUS, 2
     MOVLW 0x0F                ; If yes, fix to 0x0F
     BTFSC STATUS, 2
-    MOVWF COUNTER
+    MOVWF Value_Counter
 
-_dec_hold_check:
-    RCALL _scanKeypad
-    MOVF BUTTON, W
+_Decrement_Hold_Check:
+    RCALL _Keypad_Scan
+    MOVF Keypad_Press, W
     XORLW 0x02
     BTFSC STATUS, 2
-    GOTO _decrement_loop     ; Continue if still holding #2
-    GOTO _loop
+    GOTO _Decrement_Loop     ; Continue if still holding #2
+    GOTO _Loop_Function
 
-_reset:
-    CLRF COUNTER
-    CALL _displayDigit
-    GOTO _loop
+_Reset:
+    CLRF Value_Counter
+    CALL _Display_Digit
+    GOTO _Loop_Function
 
-_displayDigit:
-    LFSR 0, _table	    ; Load address of 7-Segment Table into FSR0
+_Display_Digit:
+    LFSR 0, _Number_Table	    ; Load address of 7-Segment Table into FSR0
     MOVF FSR0H, W           ; Copy FSR0 into TBLPTR
     MOVWF TBLPTRH
     MOVF FSR0L, W
     MOVWF TBLPTRL
 
-    BANKSEL COUNTER         ; Load digit index from COUNTER and offset TBLPTRL
-    MOVF COUNTER, W
+    BANKSEL Value_Counter         ; Load digit index from Value_Counter and offset TBLPTRL
+    MOVF Value_Counter, W
     ADDWF TBLPTRL, F
     TBLRD*                  ; Table read: load byte at TBLPTR into TABLAT
     MOVF TABLAT, W
@@ -164,7 +165,7 @@ _displayDigit:
 ; 7-Segment Table
 ;---------------------
     ORG	  0x200
-_table:
+_Number_Table:
     DB  0x3F  ; 0
     DB  0x06  ; 1
     DB  0x5B  ; 2
@@ -185,26 +186,26 @@ _table:
 ;---------------------
 ; Delay
 ;---------------------
-_delay:
+_Delay:
     MOVLW 255
-    MOVWF Outer_delay
-_outer_loop:
+    MOVWF Outer_Delay
+_Outer_Loop:
     MOVLW 255
-    MOVWF Inner_delay
-_inner_loop:
+    MOVWF Inner_Delay
+_Inner_Loop:
     NOP
     NOP
-    DECFSZ Inner_delay, F
-    GOTO _inner_loop
-    DECFSZ Outer_delay, F
-    GOTO _outer_loop
+    DECFSZ Inner_Delay, F
+    GOTO _Inner_Loop
+    DECFSZ Outer_Delay, F
+    GOTO _Outer_Loop
     RETURN
     
 ;---------------------
 ; Keypad Scanner
 ;---------------------
-_scanKeypad:
-    CLRF BUTTON
+_Keypad_Scan:
+    CLRF Keypad_Press
 
     BCF LATB, 0             ; Set Column 1 LOW
     BCF LATB, 1             ; Set Column 2 LOW
@@ -226,8 +227,8 @@ _scanKeypad:
     MOVLW 0x03	            ; If so, load "3" into WREG
     BCF LATB, 2             ; Set Column 3 LOW
 
-    MOVWF BUTTON       ; Store result in BUTTON register
-                       ; If no key was pressed, WREG still holds 0
+    MOVWF Keypad_Press      ; Store result in Keypad register
+                            ; If no key was pressed, WREG still holds 0
     RETURN    
 
     END
