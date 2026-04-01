@@ -187,10 +187,10 @@ _Number_Table:
 ;---------------------
 _Delay:
     MOVLW 0XFF
-    MOVWF Outer_Delay
+    MOVWF Outer_Delay		;Creating Delay To Keep The Changes Visible
 _Outer_Loop:
     MOVLW 0XFF
-    MOVWF Inner_Delay
+    MOVWF Inner_Delay		;Creating Additional Delay To Keep The Changes Visible
 _Inner_Loop:
     NOP
     NOP
@@ -198,7 +198,7 @@ _Inner_Loop:
     GOTO _Inner_Loop
     DECFSZ Outer_Delay, F
     GOTO _Outer_Loop
-    RETURN
+    RETURN					;Returning Back After Execution Of Both Delay Functions
     
 ;---------------------
 ; Keypad Scanner
@@ -226,8 +226,8 @@ _Keypad_Scan:
     MOVLW 0x03				; If So, Load "3" Into WREG
     BCF LATB, 2				; Set Column 3 LOW
 
-    MOVWF Keypad_Press			; Store Result In Keypad_Press Register
-					; If No Key Pressed, WREG Still Holds "0"
+    MOVWF Keypad_Press		; Store Result In Keypad_Press Register
+					
     RETURN    
 
     END
