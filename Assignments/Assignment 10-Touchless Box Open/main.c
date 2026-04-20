@@ -21,17 +21,22 @@
 int numTable[10]={0x3F,0x06,0x5B,0x4F,0x66,0x6D,0x7D,0x07,0x7F,0x6F};
 int passCode1=2;
 int passCode2=3;
+volatile int resetFlag = 0;
 
 void init(void){
-        // Set RA0 as INPUT
+   
+    ANSELBbits.ANSELB2 = 0; 
+    LATBbits.LATB2 = 0;
+    TRISBbits.TRISB2 = 0;
+     
+    // Set RA0 as INPUT
     TRISAbits.TRISA0 = 1;
     TRISAbits.TRISA1 = 1;
 
     // Set RA3 as OUTPUT
     TRISAbits.TRISA3 = 0;
     TRISAbits.TRISA5 = 0;
-    TRISBbits.TRISB2 = 0;
-
+  
     // Make pins digital
     ANSELAbits.ANSELA0 = 0;
     ANSELAbits.ANSELA1 = 0;
@@ -41,7 +46,7 @@ void init(void){
     // Turn LED OFF initially
     LATAbits.LATA3 = 0;
     LATAbits.LATA5 = 0;
-    LATBbits.LATB2 = 0;
+   
     
     // 7seg pin init
     TRISDbits.TRISD0 = 0;
@@ -68,8 +73,16 @@ void init(void){
     LATDbits.LATD5 = 0;
     LATDbits.LATD6 = 0;
     
-    
-    
+    // RB0 as input
+TRISBbits.TRISB0 = 1;
+ANSELBbits.ANSELB0 = 0;   // digital
+
+// Enable INT0 interrupt (RB0)
+INTCON0bits.INT0EDG = 1;   // rising edge
+PIR1bits.INT0IF = 0;       // clear INT0 flag
+PIE1bits.INT0IE = 1;       // enable INT0
+INTCON0bits.GIE = 1;       // global interrupt enable
+
 
 }
 void Sevenseg_Disp(int number){
@@ -91,7 +104,11 @@ void Sevenseg_Disp(int number){
 
 }
 
-
+void __interrupt(__irq(IRQ_INT0), __high_priority) ISR(void)
+{
+    resetFlag = 1;
+    PIR1bits.INT0IF = 0;
+}
 
 
 int isDigit2_pressed(){
@@ -130,6 +147,22 @@ void main(void)
 
     while(1)
     {
+        
+        if(resetFlag)
+{
+    digit1 = 0;
+    digit2 = 0;
+    TimeStamp = 0;
+    DigitFlag = 0;
+
+    Turn_Off_Motor();
+    Turn_Off_Buzzer();
+    Turn_Off_Led();
+
+    Sevenseg_Disp(0);
+
+    resetFlag = 0;
+}
         // Read input and control LED
         if(isDigit1_pressed())   // Button pressed / HIGH
         {
@@ -177,4 +210,4 @@ void main(void)
         __delay_ms(100);  
         TimeStamp++;
     }
-}
+}   
