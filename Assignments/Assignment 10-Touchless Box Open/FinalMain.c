@@ -1,6 +1,6 @@
 /*
  * ---------------------
- * Title: Touchless Sensor Motor
+ * Title: Touchless Sensor Motor Through Relay Function With Interrupt Functionality
  * ---------------------
  * Program Details:
  *  The purpose of this program is to run motor through touch less photo resistor input
