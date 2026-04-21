@@ -3,7 +3,7 @@
  * Title: Touchless Sensor Motor Through Relay Function With Interrupt Functionality
  * ---------------------
  * Program Details:
- *  The purpose of this program is to run motor through touch less photo resistor input
+ *  The purpose of this program is to run motor through touch less photo resistor input Via Relay & testing interrupt function
  * Inputs: myDelay 
  * Outputs: RA3 (LED), RD0-RD6 (7Seg), RA5-Relay, RB2 (Buzzer)
  * Setup: C- Simulator
