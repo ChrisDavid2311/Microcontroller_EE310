@@ -1,3 +1,24 @@
+/*
+ * ---------------------
+ * Title: Touchless Sensor Motor
+ * ---------------------
+ * Program Details:
+ *  The purpose of this program is to run motor through touch less photo resistor input
+ * Inputs: myDelay 
+ * Outputs: RA3 (LED), RD0-RD6 (7Seg), RA5-Relay, RB2 (Buzzer)
+ * Setup: C- Simulator
+ * Date: Apr 21, 2026
+ * File Dependencies / Libraries: It is required to include the 
+ * Configuration Header File 
+ * Compiler: xc8, V (3.10)
+ * Author: Christy Sahayaraj
+ * Versions:
+ *      V1.0: Initial
+ *      V2.0: Without Interrupt
+ *      V3.0: With Interrupt
+ *      V4.0: Final
+
+
 #include <xc.h>
 #include <stdint.h>
 #include "config.h"
