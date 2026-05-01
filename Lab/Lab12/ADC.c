@@ -62,6 +62,8 @@
 #pragma config CP = OFF         // PFM and Data EEPROM Code Protection bit (PFM and Data EEPROM code protection disabled)
 
 #include <xc.h> // must have this
+//#include "../../../../../Program Files/Microchip/xc8/v2.40/pic/include/proc/pic18f46k42.h"
+//#include "C:\Program Files\Microchip\xc8\v2.40\pic\include\proc\pic18f46k42"
 #include "pic18f47k42.h"
 #include <stdio.h>
 #include <string.h>
@@ -72,17 +74,43 @@
 #define FCY    _XTAL_FREQ/4
 
 #define Vref 3.3 // voltage reference 
-
-uint16_t digital;
-float voltage;
-
-
 int digital; // holds the digital value 
 float voltage; // hold the analog value (volt))
-char data[10];
+char data[12];
 
-void ADC_Init(void); 
-// DO: Declare void ADC_Init
+void ADC_Init(void) // DO: Declare void ADC_Init
+{
+    TRISD = 0; //RD As Output
+    LATD = 0;
+    ANSELD = 0x00;
+    
+    TRISB = 0; //RC As Output
+    LATB = 0;
+    ANSELB = 0x00;
+    
+    TRISAbits.TRISA0 = 1;  //Set RA0 to input
+    ANSELAbits.ANSELA0 =1;  //Set RA0 to analog
+    
+    ADCON0bits.FM =1; // set right justify
+    ADCON0bits.CS =1; //set ADCRC Clock
+    
+    ADCLK = 0x00;  //set ADC CLOCK Selection register to zero
+    ADPCH = 0x00; //Set RA0 as Analog channel in ADC ADPCH
+    
+    ADCAP = 0x00; //
+    ADREF = 0x00;
+    
+    ADPREL = 0x00;  //set pre-charge select to 0 in register ADPERL & ADPERH
+    ADPREH = 0x00;
+    
+    ADACQL = 0x00; //acquisition Charge share time
+    ADACQH = 0x00;
+    
+    ADPCH = 0x00;
+    ADCON0bits.ON = 1; //DO: Turn ADC On on register ADCON0
+    
+    //Clear ADCIF; //clear ADC
+}
 
 /*This code block configures the ADC
 for polling, VDD and VSS references, ADCRC
@@ -90,65 +118,26 @@ oscillator and AN0 input.
 Conversion start & polling for completion
 are included.
  */
-void main(void) {
-    
-    ADC_Init();
-    
-    TRISD = 0X00;
-    LATD = 0X00;
-    TRISC = 0X00;
-    LATC = 0X00;
-    ANSELD = 0x00;
-    ANSELC = 0x00;     
-    
-    //ADC Initialization
-      //DO: CALL ADC_Init function defined below;
+void main() {
+    ADC_Init(); //ADC Initialization
+    //DO: CALL ADC_Init function defined below;
     while (1) {
-        //DO: Set ADCON0 Go to start conversion
-        ADCON0bits.GO = 1;
-    while (ADCON0bits.GO);
+        ADCON0bits.GO =1; //DO: Set ADCON0 Go to start conversion
+        while (ADCON0bits.GO); //Wait for conversion done
+        
+        digital = (ADRESH<<8) | (ADRESL);//Combine 8-bit LSB and 2-bit MSB/
+        voltage = digital*((float)Vref/(float)(4096));// DO: define voltage = Vref/4096 (note that voltage is float type
+         
+        
+         LATD =(digital>>5); 
+         //LATB =(digital && 0x1F);
+         LATB = (ADRESH & 0x0F);
+         
+         // DO: Write a code to translate the values from ADRESH:ADRESL register 
+        //         pair to IO Port. In this case we can connect ADRESL to Port D
 
-    digital = ((int)ADRESH << 8) | ADRESL;
-
-    voltage = digital * ((float)Vref / 4096.0);
-
-    // ? ADD YOUR LED CODE HERE
-    LATD = digital & 0xFF;
-
-LATCbits.LATC3 = (digital >> 8) & 1;   // LED9
-LATCbits.LATC4 = (digital >> 9) & 1;   // LED10
-LATCbits.LATC5 = (digital >> 10) & 1;  // LED11
-LATCbits.LATC6 = (digital >> 11) & 1;  // LED12
-        /*This is used to convert integer value to ASCII string*/
+        //This is used to convert integer value to ASCII string/
         sprintf(data,"%.2f",voltage);
-        strcat(data," V");	/*Concatenate result and unit to print*/
+        strcat(data," V");    //Concatenate result and unit to print/
     }
-}
-
-void ADC_Init(void)
-{
-    //Setup ADC
- 
-    ADCON0bits.FM = 1; //right justify
-    ADCON0bits.CS = 1; //ADCRC Clock
-    
-    TRISAbits.TRISA0 = 1; //Set RA0 to input
-    ANSELAbits.ANSELA0 = 1; //Set RA0 to analog
-
-    ADCLK = 0x00; // ADC CLOCK SELECTION REGISTER (= FOSC/2)
-    ADPCH = 0x00; //RA0 is Analog channel
-
-    ADACQ = 0x00; // No additional CAP is required for sampling
-    ADREF = 0x00; // MVREF=0, PVREF=VDD
-
-    ADPREL = 0x00; // Pre-charge time select = 0
-    ADPREH = 0x00; // Not included in the data conversion cycle
-
-    ADACQL = 0x00; // Acquisition (charge share time)
-    ADACQH = 0x00; // Not included in the data conversion cycle
-
-    ADCON0bits.ON = 1; //Turn ADC On
-
-    // Optional:
-    // Clear ADCIF; Enable ADC Interrupt; Enable Global Interrupt
 }
