@@ -1,143 +1,206 @@
 /*
- * The purpose of this program is demonstrate How ADC operates. 
- * Conenct your input to RA0. 
- * Complete the code by modifying all the places identified by "DO:"
+ * The purpose of this program is demonstrate How ADC Converts The Input Voltage & Display On LCD
+ * Connect your input to RA0. 
  * Use a port to represent the input voltage in binary.  
  * Author: Christy Sahayaraj
+ * Date: 04/30/2026
+ * RD Ports For LCD
+ * RA0 is the voltage Tuning
  */
 
 
-// PIC18F46K42 Configuration Bit Settings
-
-// 'C' source line config statements
-
 // CONFIG1L
-#pragma config FEXTOSC = LP     // External Oscillator Selection (LP (crystal oscillator) optimized for 32.768 kHz; PFM set to low power)
-#pragma config RSTOSC = EXTOSC  // Reset Oscillator Selection (EXTOSC operating per FEXTOSC bits (device manufacturing default))
+#pragma config FEXTOSC = LP
+#pragma config RSTOSC  = EXTOSC
 
 // CONFIG1H
-#pragma config CLKOUTEN = OFF   // Clock out Enable bit (CLKOUT function is disabled)
-#pragma config PR1WAY = ON      // PRLOCKED One-Way Set Enable bit (PRLOCK bit can be cleared and set only once)
-#pragma config CSWEN = ON       // Clock Switch Enable bit (Writing to NOSC and NDIV is allowed)
-#pragma config FCMEN = ON       // Fail-Safe Clock Monitor Enable bit (Fail-Safe Clock Monitor enabled)
+#pragma config CLKOUTEN = OFF
+#pragma config PR1WAY   = ON
+#pragma config CSWEN    = ON
+#pragma config FCMEN    = ON
 
 // CONFIG2L
-#pragma config MCLRE = EXTMCLR  // MCLR Enable bit (If LVP = 0, MCLR pin is MCLR; If LVP = 1, RE3 pin function is MCLR )
-#pragma config PWRTS = PWRT_OFF // Power-up timer selection bits (PWRT is disabled)
-#pragma config MVECEN = ON      // Multi-vector enable bit (Multi-vector enabled, Vector table used for interrupts)
-#pragma config IVT1WAY = ON     // IVTLOCK bit One-way set enable bit (IVTLOCK bit can be cleared and set only once)
-#pragma config LPBOREN = OFF    // Low Power BOR Enable bit (ULPBOR disabled)
-#pragma config BOREN = SBORDIS  // Brown-out Reset Enable bits (Brown-out Reset enabled , SBOREN bit is ignored)
+#pragma config MCLRE    = EXTMCLR
+#pragma config PWRTS    = PWRT_OFF
+#pragma config MVECEN   = ON
+#pragma config IVT1WAY  = ON
+#pragma config LPBOREN  = OFF
+#pragma config BOREN    = SBORDIS
 
 // CONFIG2H
-#pragma config BORV = VBOR_2P45 // Brown-out Reset Voltage Selection bits (Brown-out Reset Voltage (VBOR) set to 2.45V)
-#pragma config ZCD = OFF        // ZCD Disable bit (ZCD disabled. ZCD can be enabled by setting the ZCDSEN bit of ZCDCON)
-#pragma config PPS1WAY = ON     // PPSLOCK bit One-Way Set Enable bit (PPSLOCK bit can be cleared and set only once; PPS registers remain locked after one clear/set cycle)
-#pragma config STVREN = ON      // Stack Full/Underflow Reset Enable bit (Stack full/underflow will cause Reset)
-#pragma config DEBUG = OFF      // Debugger Enable bit (Background debugger disabled)
-#pragma config XINST = OFF      // Extended Instruction Set Enable bit (Extended Instruction Set and Indexed Addressing Mode disabled)
+#pragma config BORV     = VBOR_2P45
+#pragma config ZCD      = OFF
+#pragma config PPS1WAY  = ON
+#pragma config STVREN   = ON
+#pragma config DEBUG    = OFF
+#pragma config XINST    = OFF
 
-// CONFIG3L
-#pragma config WDTCPS = WDTCPS_31// WDT Period selection bits (Divider ratio 1:65536; software control of WDTPS)
-//#pragma config WDTE = OFF       // WDT operating mode (WDT Disabled; SWDTEN is ignored)
+// CONFIG3L ******* FOR WATCHDOG ********
+#pragma config WDTCPS   = WDTCPS_31   // Divider ratio 1:65536; software control of WDTPS
 
 // CONFIG3H
-#pragma config WDTCWS = WDTCWS_7// WDT Window Select bits (window always open (100%); software control; keyed access not required)
-#pragma config WDTCCS = SC      // WDT input clock selector (Software Control)
+#pragma config WDTCWS   = WDTCWS_7    // Window always open
+#pragma config WDTCCS   = SC          // Software Control clock source (31 kHz)
 
 // CONFIG4L
-#pragma config BBSIZE = BBSIZE_512// Boot Block Size selection bits (Boot Block size is 512 words)
-#pragma config BBEN = OFF       // Boot Block enable bit (Boot block disabled)
-#pragma config SAFEN = OFF      // Storage Area Flash enable bit (SAF disabled)
-#pragma config WRTAPP = OFF     // Application Block write protection bit (Application Block not write protected)
+#pragma config BBSIZE   = BBSIZE_512
+#pragma config BBEN     = OFF
+#pragma config SAFEN    = OFF
+#pragma config WRTAPP   = OFF
 
 // CONFIG4H
-#pragma config WRTB = OFF       // Boot Block Write Protection bit (Boot Block not write-protected)
-#pragma config WRTC = OFF       // Configuration Register Write Protection bit (Configuration registers not write-protected)
-#pragma config WRTD = OFF       // Data EEPROM Write Protection bit (Data EEPROM not write-protected)
-#pragma config WRTSAF = OFF     // SAF Write protection bit (SAF not Write Protected)
-#pragma config LVP = ON         // Low Voltage Programming Enable bit (Low voltage programming enabled. MCLR/VPP pin function is MCLR. MCLRE configuration bit is ignored)
+#pragma config WRTB     = OFF
+#pragma config WRTC     = OFF
+#pragma config WRTD     = OFF
+#pragma config WRTSAF   = OFF
+#pragma config LVP      = ON
 
 // CONFIG5L
-#pragma config CP = OFF         // PFM and Data EEPROM Code Protection bit (PFM and Data EEPROM code protection disabled)
+#pragma config CP       = OFF
 
-#include <xc.h> // must have this
-//#include "../../../../../Program Files/Microchip/xc8/v2.40/pic/include/proc/pic18f46k42.h"
-//#include "C:\Program Files\Microchip\xc8\v2.40\pic\include\proc\pic18f46k42"
+#include <xc.h>
 #include "pic18f47k42.h"
 #include <stdio.h>
 #include <string.h>
 #include <stdlib.h>
 
+#define _XTAL_FREQ 4000000
+#define Vref 5
 
-#define _XTAL_FREQ 4000000                 // Fosc  frequency for _delay()  library
-#define FCY    _XTAL_FREQ/4
+// LCD pins
+#define RS LATB0
+#define EN LATB1
+#define ldata LATD
 
-#define Vref 3.3 // voltage reference 
-int digital; // holds the digital value 
-float voltage; // hold the analog value (volt))
-char data[12];
+#define LCD_Port TRISD
+#define LCD_Control TRISB
 
-void ADC_Init(void) // DO: Declare void ADC_Init
+#define LCD_Control_digital ANSELB
+#define LCD_data_digital ANSELD
+
+int digital;
+float voltage;
+char data[16];
+
+// Function prototypes
+void LCD_Init(void);
+void LCD_Command(char cmd);
+void LCD_Char(char dat);
+void LCD_String(const char *msg);
+void LCD_String_xy(char row, char pos, const char *msg);
+void ADC_Init(void);
+
+// ---------------- MAIN ----------------
+void main(void)
 {
-    TRISD = 0; //RD As Output
-    LATD = 0;
-    ANSELD = 0x00;
-    
-    TRISB = 0; //RC As Output
-    LATB = 0;
-    ANSELB = 0x00;
-    
-    TRISAbits.TRISA0 = 1;  //Set RA0 to input
-    ANSELAbits.ANSELA0 =1;  //Set RA0 to analog
-    
-    ADCON0bits.FM =1; // set right justify
-    ADCON0bits.CS =1; //set ADCRC Clock
-    
-    ADCLK = 0x00;  //set ADC CLOCK Selection register to zero
-    ADPCH = 0x00; //Set RA0 as Analog channel in ADC ADPCH
-    
-    ADCAP = 0x00; //
-    ADREF = 0x00;
-    
-    ADPREL = 0x00;  //set pre-charge select to 0 in register ADPERL & ADPERH
-    ADPREH = 0x00;
-    
-    ADACQL = 0x00; //acquisition Charge share time
-    ADACQH = 0x00;
-    
-    ADPCH = 0x00;
-    ADCON0bits.ON = 1; //DO: Turn ADC On on register ADCON0
-    
-    //Clear ADCIF; //clear ADC
-}
+    LCD_Init();
+    ADC_Init();
 
-/*This code block configures the ADC
-for polling, VDD and VSS references, ADCRC
-oscillator and AN0 input.
-Conversion start & polling for completion
-are included.
- */
-void main() {
-    ADC_Init(); //ADC Initialization
-    //DO: CALL ADC_Init function defined below;
-    while (1) {
-        ADCON0bits.GO =1; //DO: Set ADCON0 Go to start conversion
-        while (ADCON0bits.GO); //Wait for conversion done
-        
-        digital = (ADRESH<<8) | (ADRESL);//Combine 8-bit LSB and 2-bit MSB/
-        voltage = digital*((float)Vref/(float)(4096));// DO: define voltage = Vref/4096 (note that voltage is float type
-         
-        
-         LATD =(digital>>5); 
-         //LATB =(digital && 0x1F);
-         LATB = (ADRESH & 0x0F);
-         
-         // DO: Write a code to translate the values from ADRESH:ADRESL register 
-        //         pair to IO Port. In this case we can connect ADRESL to Port D
+    LCD_String_xy(1, 0, "ADC Voltage:");
 
-        //This is used to convert integer value to ASCII string/
-        sprintf(data,"%.2f",voltage);
-        strcat(data," V");    //Concatenate result and unit to print/
+    while(1)
+    {
+        ADCON0bits.GO = 1;
+        while(ADCON0bits.GO);
+
+        digital = ((int)ADRESH << 8) | ADRESL;
+
+        voltage = digital * ((float)Vref / 4095.0);
+
+        sprintf(data, "%.2f V", voltage);
+
+        LCD_String_xy(2, 0, "                ");
+        LCD_String_xy(2, 0, data);
+
+        __delay_ms(300);
     }
 }
+
+// ---------------- ADC INIT ----------------
+void ADC_Init(void)
+{
+    TRISAbits.TRISA0 = 1;
+    ANSELAbits.ANSELA0 = 1;
+
+    ADCON0bits.FM = 1;
+    ADCON0bits.CS = 1;
+
+    ADCLK = 0x00;
+    ADPCH = 0x00;
+
+    ADCAP = 0x00;
+    ADREF = 0x00;
+
+    ADPREL = 0x00;
+    ADPREH = 0x00;
+
+    ADACQL = 0x00;
+    ADACQH = 0x00;
+
+    ADCON0bits.ON = 1;
+}
+
+// ---------------- LCD FUNCTIONS ----------------
+void LCD_Init(void)
+{
+    __delay_ms(15);
+
+    LCD_Port = 0x00;
+    LCD_Control = 0x00;
+
+    LCD_data_digital = 0x00;
+    LCD_Control_digital = 0x00;
+
+    LCD_Command(0x01);
+    LCD_Command(0x38);
+    LCD_Command(0x0C);
+    LCD_Command(0x06);
+}
+
+void LCD_Command(char cmd)
+{
+    ldata = cmd;
+    RS = 0;
+    EN = 1;
+    NOP();
+    EN = 0;
+    __delay_ms(3);
+}
+
+void LCD_Char(char dat)
+{
+    ldata = dat;
+    RS = 1;
+    EN = 1;
+    NOP();
+    EN = 0;
+    __delay_ms(1);
+}
+
+void LCD_String(const char *msg)
+{
+    while((*msg) != 0)
+    {
+        LCD_Char(*msg);
+        msg++;
+    }
+}
+
+void LCD_String_xy(char row, char pos, const char *msg)
+{
+    char location = 0;
+
+    if(row <= 1)
+    {
+        location = 0x80 | (pos & 0x0F);
+        LCD_Command(location);
+    }
+    else
+    {
+        location = 0xC0 | (pos & 0x0F);
+        LCD_Command(location);
+    }
+
+    LCD_String(msg);
+}
+
