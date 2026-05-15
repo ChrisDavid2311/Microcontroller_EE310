@@ -4,7 +4,6 @@
  * DESCRIPTION:
  * This program controls a servo motor using PWM output, 2 buttons used to rotate left & right
  * VERSION: 1.0
- * DATE: May 14, 2026
  *
  * AUTHOR: Christy Sahayaraj
  * Date: 05/14/2026
