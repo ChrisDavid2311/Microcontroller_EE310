@@ -30,7 +30,7 @@
 .equ GPIO_MODER5_OUT,     (1 << 10)  @ 01 = general-purpose output
 .equ GPIO_ODR5,           (1 << 5)   @ Bit 5: PA5 output data
 
-.equ DELAY_COUNT, 0x200000            @ Delay loop count (~0.5s at 4 MHz)
+.equ DELAY_COUNT, 0x200000            @ Delay loop count (~1s at 4 MHz)
 
 @ ============================================
 @ Main function
