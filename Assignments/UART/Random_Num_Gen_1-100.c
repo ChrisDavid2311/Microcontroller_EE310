@@ -1,6 +1,50 @@
 // ============================================
 // Title:   UART Function RAND
 // Author:  Christy Sahayaraj
+// Date:    05/18/2026
+// Version: Final
+// Purpose: Random Number Generation (1-100) Every 1 Second
+// Outcome: Generating Random Number B/W 1 to 100 Every 1 Second
+//============================================
+
+
+#include "mcc_generated_files/system/system.h"
+#include <stdio.h>
+#include <stdint.h>
+
+static uint32_t seed = 12345;
+
+uint32_t get_random(void)
+{
+    seed = (seed * 1103515245 + 12345) & 0x7fffffff;
+    return seed;
+}
+
+int random_number(int min_num, int max_num)
+{
+    return (get_random() % (max_num - min_num + 1)) + min_num;
+}
+
+int main(void)
+{
+    SYSTEM_Initialize();
+    UART2_Initialize();
+    
+    while(1)
+    {
+        printf("Min : 1 Max : 100 %d\r\n", random_number(1, 100));
+        __delay_ms(1000);
+        PORTBbits.RB1 ^= 1;
+    }
+}
+
+
+
+
+
+// ============================================
+// Title:   UART Function RAND
+// Author:  Christy Sahayaraj
 // Date:    05/16/2026
 // Version: 1
 // Purpose: Random Number Generation (1-100) Every 1 Second
@@ -41,42 +85,3 @@ int main(void)
 }
 
 
-// ============================================
-// Title:   UART Function RAND
-// Author:  Christy Sahayaraj
-// Date:    05/18/2026
-// Version: Final
-// Purpose: Random Number Generation (1-100) Every 1 Second
-// Outcome: Generating Random Number B/W 1 to 100 Every 1 Second
-//============================================
-
-
-#include "mcc_generated_files/system/system.h"
-#include <stdio.h>
-#include <stdint.h>
-
-static uint32_t seed = 12345;
-
-uint32_t get_random(void)
-{
-    seed = (seed * 1103515245 + 12345) & 0x7fffffff;
-    return seed;
-}
-
-int random_number(int min_num, int max_num)
-{
-    return (get_random() % (max_num - min_num + 1)) + min_num;
-}
-
-int main(void)
-{
-    SYSTEM_Initialize();
-    UART2_Initialize();
-    
-    while(1)
-    {
-        printf("Min : 1 Max : 100 %d\r\n", random_number(1, 100));
-        __delay_ms(1000);
-        PORTBbits.RB1 ^= 1;
-    }
-}
